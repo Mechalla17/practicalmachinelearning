@@ -1,7 +1,6 @@
 ---
 title: "Performance prediction of Barbell lifts using data from wearable accelerometers"
 author: "Nicolas Montenegro"
-date: "10/9/2021"
 output: html_document
 ---
 
@@ -9,22 +8,104 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+# Introduction
+ 
+The goal of this project is to predict the performance of [barbell lifts](<https://barbend.com/best-barbell-exercises/>)
+ by a group of six individuals by using wearable accelerometers. The data was provided by [groupware](<http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har#weight_lifting_exercises>). The participants were asked to perform the exercise in five different ways (correctly and incorrectly). Then, the performance of the exercise was assigned to a particular class: A, B, C, D, and E depending on how the barbell lift was executed. The purpose of this research is to build a model capable of predicting the class which a specific barbell lift execution belongs to.
+ 
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+# Project Design 
 
-```{r cars}
-summary(cars)
+I firstly deleted the missing information from training and test sets. This “cleaning” process significantly facilitates exploratory data analysis by limiting the number of variables. Given that the test set and training set for the project are delivered independently, no need to split it on a training and test partition is required. Instead, I decided to split the data for training the model into a **TrainingP** and **ValidationP** sets with dimensions 13737 and 5885 respectably. Both sets consisted of 60 variables with the validation set being approximately half the cardinality of the training one.
+
+
+## Exploratory Analysis 
+
+I took the methodological decision to plot and train the model exclusively on the **TrainingP** set. The **ValidationP** set remained untouched. The purpose of this decision was to have an unbiased tool to estimate the Out-Sample error of the model.
+
+The function *featurePlot* is used to determine whether the variable to be predicted, classe, is correlated with one or more variables in the training set. However, the analysis show that none of the variables were directly correlated with the one to be predicted. Therefore, a deeper analysis is required to estimate the variables that potentially could be employed as predictors of the classe variable. 
+
+In that line, I searched for variables that could generate a classification patron with the rest of the variables of the TrainingP set. This line of exploratory analyses were done with *featurePlot* function, and culminated on one variable, _roll_belt_. The last separates the data into two clusters when plotted against the other variables in the TrainingP set (image 1).
+
+```{r image 1, echo=FALSE, message=FALSE, warning=FALSE}
+library(caret)
+library(readr)
+Data_project <- read_csv("~/Caret R/Data_project.csv")
+
+
+dataproject1 <- as.data.frame(Data_project)
+
+inTrain <- createDataPartition(y=dataproject1$classe, p=0.7, list = FALSE)
+TrainingP <-dataproject1[inTrain,]
+ValidationP <-dataproject1 [-inTrain,]
+
+featurePlot(x=TrainingP[,c("roll_belt","roll_dumbbell","raw_timestamp_part_2","gyros_belt_y","gyros_belt_z","magnet_belt_y","gyros_arm_x","accel_arm_x","magnet_arm_x","yaw_dumbbell","magnet_dumbbell_z","magnet_forearm_y" )],
+            y=TrainingP$classe, plot="pairs")
+
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+No information is given concerning the classe variable. In other words, it was not specified which class or classes the barbell lifts done correctly or incorrectly belong to. Therefore, I could not identify which cluster reflects when a barbell lift is done correctly or incorrectly. Nonetheless, the patron shows a clear distinction of the performance of the exercise. This provides valuable information to select the variables to be used to train the model.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+I use the *qplot* function to plot the _roll_belt_ variable against the _raw_timestamp_part_2_ variable and color the variable classe (image 2).
+
+```{r image2, echo=FALSE, message=FALSE, warning=FALSE}
+qplot(roll_belt,raw_timestamp_part_2,colour = classe, data = TrainingP)
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+The plot shows the classes that belong to each cluster. Particularly interesting is the fact that classes A and B belong to only one cluster, and that classes D and E appear in both of them. This means that the exploratory analysis provides tools to roughly differentiate predictable classes.
+
+
+## Training the Model
+
+Given the information found in the exploratory analysis, I decided to use only variables which fulfill two conditions:
+
+1.	Condition No. 1: When plotted individually against the _roll_belt_ variable by using the qplot function, two characteristics should be observed. On the one hand, the two clusters of data should be seen. On the other, classes A and B should remain in one of the clusters.
+
+2.	Condition No. 2: When plotted the class variable by using the featurePlot function, against the variables selected based on the first condition, the two cluster patrons should remained in place. 
+
+
+Thus, condition 1 is designed to select the best predictors, while condition 2 reduces the noise of the model. The main idea is to achieve the optimal ration between predictability and noise in order to obtain a viable accuracy rate for the model, above 0.80. 
+
+
+```{r image3, echo=FALSE, message=TRUE, warning=TRUE}
+qplot(roll_belt,magnet_dumbbell_z,colour =classe , data = TrainingP)
+
+```
+
+The plot above (image3) is a situation on which condition 1 fails to be fulfilled. Although two clusters of points can be observe in the image, a portion of points representing class B is noticeable in both clusters unlike in image 2. Once I apply condition 1 on the variables on the TrainingP set, I plotted the selected ones using featurePlot function against the classe variable to verify whether condition 2 holds.
+
+
+Unfortunately, the two cluster patron disappeared. So condition 2 is not fulfilled. In order to recover the patron, I begin removing one by one variables of the plot until the patron was visible again. This method of selection narrows the variables to be included in the model from 60 to 12. I conjecture that these are the variables that have the more prediction power with less noise, and therefore, the ones that will deliver more accuracy.
+
+Given that no linear relation was found between the variables on the training set, I discarded the use of *Principal Component Analysis*, and any model based on linear regression. The fact that the variable to be predicted has five different outcomes lead me to conjecture that models based on Random Forest would be more suitable for the prediction. In that line, I decided to train two models, one based on the _Random Forest_ method and the other on the _Boosting with Random Forest one_.
+
+# In Sample error and Cross-Validation
+
+I use two predictions in the TrainingP set to obtain the In Sample error of the model. One using the model train with the Random Forest method, and one with the Boosting with Random Forest method respectably. The Random Forest method achieved an accuracy rate of 0.9911, while the Boosting with Random Forest method had one of 0.8841. I employ the confusion matrix function to calculate both values.
+
+Since the accuracy levels were at least 0.8, I proceed to make two predictions on the **ValidationP** set to estimate the **Out Sample error**. The Random Forest method achieved an accuracy rate of 0.992, while the Boosting with Random Forest method achieved 0.8879. Again, the _confusionMatrix_ function is used to calculate both values. 
+
+Unexpectedly, both models slightly increase their accuracy on the ValidationP set with respect to the TrainingP set. This was so despite the fact that both models were exposed to new data. Therefore, an upper bound for the accuracy rate of both models could be given with more certainty than a lower bound.
+
+The argument for the upper bounds follows directly from the predictions on the validation set, that is, 0.992 and 0.8879 for the Random Forest model and The Boosting Random Forest respectively. The lower bound is estimated using the fact that both models perform better when confronted with new data. It led me to conjecture that a dramatic fall of accuracy of both models should not be expected. Since a minimum of accuracy of 0.80, it is necessary for the models to be viable. I set a lower bound of 0.80 for both models.
+
+I estimate that the **Out Sample error** for the Random Forest model is in a range between 0.992 and 0.80, as for the Boosting with Random Forest model a value between 0.8879 and 0.80.
+
+## Test set and Out Sample Error
+
+Two predictions were made on the **test set**. The one from the Random Forest model got an accuracy rate of 0.95, while 0.85 for the one made with the Boosting with Random Forest model. In that line, the actual Out Sample error was between the ranges I predicted for both models.
+
+On the one hand, The Random Forest model had an **Out Sample error** of 0.042, while the model based on the Boosting with Random Forest method had one of 0.379. Although the loss in accuracy is similar in both models, it is interesting to notice that it was slightly bigger on the Random Forest Model.
+
+This fact may subject that: Although the Random Forest method performs better in terms of predictability, the Boosting with Random Forest method seems to be less prone to lose accuracy. This last fact may be a factor in the future performance of both models.
+
+# Conclusion
+ 
+It is worth noticing that both models performed well above the 0.80 accuracy threshold. This shows that the method I developed on building the models has proven to be very effective.  
+ 
+
+
