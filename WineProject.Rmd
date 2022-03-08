@@ -1,0 +1,165 @@
+---
+title: " Red Wine Quality Prediction Using Data from the Vihno Verde region in Portugal"
+author: "Nicolas Montenegro"
+output: html_document
+  
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+
+This report describes a Machine Learning algorithm employed to predict the quality of red wine from the vihno verde region in Portugal. The data for this project was obtained from the UCI machine learning repository [1].  
+
+
+## Project Design 
+
+The data set consists of 1599 samples of wines and 12 variables. I partitioned the data into three sets: a training set (TrainingP), a validation set (ValidationP), and a test set (TestingP). The dimensions of the sets are as follows: 1202, 397, 397 respectively. I employed the center and scale method for normalizing the data using the preProcess function in R. 
+
+I took the methodological decision to plot and train the model exclusively on the **TrainingP** set. The **ValidationP** set remained untouched. The purpose of this decision was to have an unbiased tool to estimate the Out-Sample error of the model.
+
+## Exploratory Analysis 
+
+The purpose of the exploratory analysis is twofold. On the one hand, it should narrow the number of variables to be included on the model improving computability. On the other hand, it should identify the main features of wine quality. The first task involves statistical techniques, while the second one embraces knowledge of the wine-making process.
+
+One technique used to reduce the number of variables is Principal component Analysis (PCA). PCA can be used to “join” two variables that are linearly correlated, thus reducing noise without sacrificing predicted power.
+
+In that line, I used the correlation function (cor) of R on all variables on the data set, with the exception of the quality variable I searched for variables with 0.8 correlation ratio to apply PCA on them. Unfortunately, no such correlation was found. Thus, I discarded preprocessing with PCA.
+
+Given that PCA was discarded by the results obtained with the correlation function. I use the least absolute shrinkage and selection operator (LASSO). LASSO can be used to detect the variables with the least variability with respect to the quality variable. Thus, it narrowed the number of predictors (variables).
+
+![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\Lasso.png)
+
+The image above shows the variables selected with the LASSO method: volatile acidity, pH, sulphates and alcohol. In that line, the statistical techniques employed have narrowed the possible number of predictors from 11 to 4.
+Nonetheless, an analysis of the wine-making process is necessary to determine whether the statistical correlations found with the LASSO method are due to chance or there is a “cause-effect” relation between the variables that explains the correlation. In that line, I explore with some more detail how wine quality is evaluated.    
+
+## Measuring wine quality 
+
+Wine quality is established through wine-testing procedures dedicated to identify defects on wine. The process involves feedback from experts. In that line, a group of experts or sommeliers received a score card, such as the Davids-20 point scorecard. Then, wine is given to the sommeliers to be further evaluated by assigning a score to each wine according to the parameters on the scorecard: The higher the score the better the wine.  
+
+![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\Table.png)
+
+
+The idea behind the Davids-20 point scorecard is to have a unique set of features to be evaluated by wine experts. In that line, the scorecard helps the judges to focus on particular aspects of the wine, so the quality can be improved by the winemaker.
+ 
+Nonetheless, the experts do not usually follow the scores on the card. Moreover, they establish scores on their own [3]. The reason for this is that wine experts value certain features more than others. The result is that a wine may be considered a high quality wine by one expert, but a low quality wine by another one.
+ 
+Despite the difficulty mentioned above. The score-card is valuable because although there may be a disagreement on the amount of sugar necessary for a wine to be ranked as a high quality one, there is no disagreement on whether sugar is a factor to be considered in evaluating the quality of wine. In that line, the information provided by the score-card in conjunction with the results of the LASSO method may give us the best predictors for wine quality.     
+
+
+### Volatile acidity
+
+Given that only Volatile acidity is present both on the score-card and on the LASSO analysis. An exploration of the relationship between Volatile acidity and wine quality seems a good place to start. “Volatile acidity (VA) is a measure of the wine’s volatile (or gaseous) acids. The primary volatile acid in wine is acetic acid, which is also the primary acid associated with the smell and taste of vinegar”[4] 
+
+In that line, higher concentrations of VA, in particular of acetic acid, may lead to a vinegar taste and therefore is considered as an indicator of spoilage. Moreover, given the importance of VA in wine, governments has put regulation in place to establish the amount of VA allow in order for a wine to be commercialized [5]
+
+Given the information from the analysis. I conjecture that a pattern should emerge when plotting VA and the quality variable.  
+
+![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\Rplot1.png)
+
+In the image above, a clear relation between quality and VA can be observed, that is, wines with higher concentrations of VA have the lower quality (3), while the higher quality wines (8) have less VA. Thus, VA seems to be a good predictor for wine quality.
+ 
+So far, the statistical analysis along with information provided by Davids-20 point scorecard has delivered a good possible predictor. Nonetheless, not much can be said with respect to other variables of interest. In that line, a deeper exploration of the wine making process may be necessary to select predictors.
+
+
+### Sulphates
+
+I found that a certain amount of VA is always to be expected in the wine. Therefore, methods, such as the use of sulphates, have been developed to reduce the concentration of VA in the wine [6]. In that line, when plotting, the quality and the sulphates variables from the data set a pattern should be expected.
+
+![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\Rplot2.png)
+
+The plot above shows that higher concentrations of sulphates are to be found on the best quality wines(8) in comparison with lowest quality ones(3). Suggesting that the use of sulfates to reduce the amount of VA took place.
+
+In that line, the inclusion of the sulphates as a predictor can be justified on the two grounds. On the one hand, there is a statistical correlation between it and the quality variable shown by the LASSO model. On the other hand, there is a connection between sulphates and VA, which explains their role as a predictor of quality.
+
+
+### pH
+
+Although the presence of acetic acid must be reduced on the wine, higher concentration of other acids such as tantric and malec ones, found naturally in grapes, are beneficial to the wine making process.
+
+This lies on the fact that one of the causes of spoilage is oxidation, which can be prevented with acids. The acidity levels are measured using the pH scale that goes from cero to fourteen. The values closer to zero represent more acidity, and values closer to fourteen lower levels of it.
+
+
+![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\pH.png)[7]
+
+
+Typically, wines have an acidity range between 3 and 4 according to the pH scale. Thus, higher pH values indicate lower acidity levels, and therefore an increased risk of oxidation. Winemakers add sulfur acid to wine in order to decrease the pH value, and therefore reduce the risk of oxidation.  
+
+In that line, a plot of pH variable against the quality one, should show a decreasing relation, that is, lower pH values should be present on the best quality wines, while higher ones on low quality ones.
+
+
+![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\Rplot3.png)
+
+As predicted, the plot shows the decreasing relation between pH values and quality. As with the variables VA and sulphates, the statistical argument and the information of the wine-making process support the inclusion of the pH variable on the model.
+
+### Alcohol
+
+Though sulfuric acid can be effective in lowering pH values, care has to be taken on the amount of sulfur acid added to the wine. An excess of it may lead to rotten eggs or overcooked cabbage flavor.Therefore, in order to reach appropriate levels of acidity without compromising the quality of the wine, other factors such as alcohol have to be taken into count.
+
+Given that alcohol reduces the risk of oxidation by decreasing the pH values, one may expect an increasing in the wine quality with the increase of alcohol levels when plotting the quality variable against the alcohol one.
+
+![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\Rplot4.png)
+
+As anticipated, an increasing relation between alcohol content and quality can be observed in the plot above. That is, higher concentrations of alcohol are present in the best quality wines, while lesser levels of it were to be found on the lower quality ones.
+
+Given the arguments exposed, I build a predicted algorithm based on four variables: volatile acidity, sulphates, pH, and alcohol.
+
+## Training the Model
+
+Given that no linear relation was found between the variables on the training set, I discarded the use of any model based on linear regression. The fact that the variable to be predicted has six different outcomes leads me to conjecture that models based on *Random Forest* would be more suitable for the prediction.
+
+In that line, I train two models, one based on the _Random Forest Method_ and the other on the _Boosting with Random Forest_ one.
+
+## In Sample error and Cross-Validation
+
+I made two predictions in the training set to obtain the _In Sample error_ of the model. One using the model train with the _Random Forest Method_, and one with the _Boosting with Random Forest method_ respectively. The Random Forest method achieved an accuracy rate of 1, while the Boosting with Random Forest Method had one of 0.7596. I employed the *confusion matrix* function to calculate both values.
+
+
+Since the accuracy level of at least one of the models was at least 0.8., I proceeded to make one prediction on the *validation set* to estimate the _Out Sample error_ using the _Random forest model_. The model achieved an accuracy rate of 0.9068 again, *the confusion Matrix* function was used to calculate both values.
+
+As expected, the accuracy rate of the _Random forest model_ decreased when exposed to new data. Nonetheless, the accuracy rate of the Random Forest Method remains well about the 0.8 threshold, as an indication of the viability of the model.
+
+I set an upper bound for the _Random Forest Model_ based on its performance in the validation set, that is, 0.9068 of accuracy. I estimated the _Out-Sample error_ on 0.8 given the model loses 0.1 on accuracy on the validation set. Thus the final accuracy of the model should be in the range between 0.9068 and 0.8.
+
+## Test set and Out Sample Error
+
+I made a prediction on the test set with the _Random Forest Model_ with an accuracy rate of 0.8967. In that line, the actual _Out Sample error_ was between the ranges I predicted. Moreover, the actual accuracy of the model was significantly closer to the upper bound than to the lower one. In that line, a substantial drop in accuracy should not be expected on new data, making the model a valuable tool for predicting wine quality. 
+
+# Conclusion
+
+Paolo Cortez and company [8] created an algorithm based on SVA (singular value decomposition) for predicting the quality of wine using the same data set I use(I focused on the samples of red wine, while Cortez and company analyzed both the red and white samples). . Their algorithm achieved an accuracy rate of 89.9% [9] overall. Nonetheless, the prediction accuracy for the qualities 3, 4 and 8 on red wines were very low [10]. In contrast, my algorithm, based on a non-linear approach, was fairly accurate for predicting those classes, despite the fact that it only used 4 out of the 11 variables unlike Cortez and company algorithm.
+
+In that line, the methodology I employed on building the algorithm has shown that using statistical tools along with information about the nature of the data can lead to a more accurate algorithm that also is able to explain the relation between the variables.  
+
+# Bibliography 
+
+[1] See,[UCI machine learning repository](<https://archive.ics.uci.edu/ml/datasets/wine+quality/>)
+
+[2] See, Ebeler, Susan E. Linking Flavor Chemistry to Sensory Analysis of Wine. In Flavor Chemistry: Thirty Years of Progress. Springer Science+Business Media, 1999. New York, Pp 410.
+
+[3] See, Noble, A.C. Analysis of Wine Sensory Properties. In Wine Analysis. Springer-Verlag,1988. Berlin, Pp 22.
+
+[4] See,[Volatile Acidity in Wine](<https://extension.psu.edu/volatile-acidity-in-wine/>)
+
+[5] See,[Legal Information institute](<https://www.law.cornell.edu/cfr/text/27/4.21/>)
+
+[6] See,[Mazzeo, Jacopo](<https://www.winemag.com/2021/11/09/volatile-acidity-wine//>).What Does ‘Volatile Acidity’ Mean in Wine? 
+
+[7] See, [Hale, Noelle](<https://www.winemag.com/2021/11/09/volatile-acidity-wine//>). What is Acidity on Wine?
+
+[8] See, P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis.
+Modeling wine preferences by data mining from physicochemical properties.
+In Decision Support Systems, Elsevier, 47(4):547-553, 2009.
+
+[9]See, P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis.
+Modeling wine preferences by data mining from physicochemical properties.
+In Decision Support Systems, Elsevier, 47(4):547-553, 2009.Pp 550
+
+[10] See, P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis.
+Modeling wine preferences by data mining from physicochemical properties.
+In Decision Support Systems, Elsevier, 47(4):547-553, 2009.Pp 551
+
+
+
