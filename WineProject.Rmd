@@ -39,7 +39,7 @@ Nonetheless, an analysis of the wine-making process is necessary to determine wh
 
 Wine quality is established through wine-testing procedures dedicated to identify defects on wine. The process involves feedback from experts. In that line, a group of experts or sommeliers received a score card, such as the Davids-20 point scorecard. Then, wine is given to the sommeliers to be further evaluated by assigning a score to each wine according to the parameters on the scorecard: The higher the score the better the wine.  
 
-![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\Table.png)
+![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\Table.png) [2]
 
 
 The idea behind the Davids-20 point scorecard is to have a unique set of features to be evaluated by wine experts. In that line, the scorecard helps the judges to focus on particular aspects of the wine, so the quality can be improved by the winemaker.
@@ -147,7 +147,7 @@ In that line, the methodology I employed on building the algorithm has shown tha
 
 [6] See,[Mazzeo, Jacopo](<https://www.winemag.com/2021/11/09/volatile-acidity-wine//>).What Does ‘Volatile Acidity’ Mean in Wine? 
 
-[7] See, [Hale, Noelle](<https://www.winemag.com/2021/11/09/volatile-acidity-wine//>). What is Acidity on Wine?
+[7] See, [Hale, Noelle](<https://www.winemag.com/2019/06/19/what-is-acidity-in-wine//>). What is Acidity on Wine?
 
 [8] See, P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis.
 Modeling wine preferences by data mining from physicochemical properties.
