@@ -1,24 +1,46 @@
 ---
-title: " Red Wine Quality Prediction Using Data from the Vihno Verde region in Portugal"
+title: " Red Wine Quality Prediction Using Data from the Vinho Verde region in Portugal"
 author: "Nicolas Montenegro"
 output: html_document
   
 ---
 ```{r setup, include=FALSE}
+
+
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Introduction
 
 
-This report describes a Machine Learning algorithm employed to predict the quality of red wine from the vihno verde region in Portugal. The data for this project was obtained from the UCI machine learning repository [1].  
+This report describes an algorithm employed to predict the quality of red wine from the vinho verde region in Portugal. The data for this project was obtained from the UCI machine learning repository [1].  
 
 
 ## Project Design 
 
-The data set consists of 1599 samples of wines and 12 variables. I partitioned the data into three sets: a training set (TrainingP), a validation set (ValidationP), and a test set (TestingP). The dimensions of the sets are as follows: 1202, 397, 397 respectively. I employed the center and scale method for normalizing the data using the preProcess function in R. 
+The data set consists of 1599 samples of wines and 12 variables. I partitioned the data into two sets: a train set, and a test set. The dimensions of the sets are as follows: 1200, 399 respectively. 
 
-I took the methodological decision to plot and train the model exclusively on the **TrainingP** set. The **ValidationP** set remained untouched. The purpose of this decision was to have an unbiased tool to estimate the Out-Sample error of the model.
+```{r image 1, echo=FALSE,message=FALSE, warning=FALSE}
+
+library(readr)
+library(caret)
+library(plotly)
+winequality_red <- read_delim("C:/Users/Wendy Marin/Downloads/winequality-red.csv", 
+                              ";", escape_double = FALSE, trim_ws = TRUE)
+
+
+inTrain = createDataPartition(winequality_red$quality, p = 3/4)[[1]]
+train_set = winequality_red[ inTrain,]
+test_set = winequality_red[-inTrain,]
+
+
+dim(train_set)
+
+dim(test_set)
+
+
+```
+
 
 ## Exploratory Analysis 
 
@@ -28,9 +50,31 @@ One technique used to reduce the number of variables is Principal component Anal
 
 In that line, I used the correlation function (cor) of R on all variables on the data set, with the exception of the quality variable I searched for variables with 0.8 correlation ratio to apply PCA on them. Unfortunately, no such correlation was found. Thus, I discarded preprocessing with PCA.
 
+```{r image 2, echo=FALSE,message=FALSE, warning=FALSE}
+
+N <-abs(cor(train_set[,-12])) 
+diag(N) <- 0
+which(N > 0.8, arr.ind = F)
+
+
+```
+
+
 Given that PCA was discarded by the results obtained with the correlation function. I use the least absolute shrinkage and selection operator (LASSO). LASSO can be used to detect the variables with the least variability with respect to the quality variable. Thus, it narrowed the number of predictors (variables).
 
-![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\Lasso.png)
+```{r image 3, message=FALSE, warning=FALSE, include=FALSE}
+
+modwineLasso1 <- train(quality ~., data= as.data.frame(train_set),
+                       method = "lasso")
+
+
+plot(modwineLasso1$finalModel)
+
+
+```
+
+![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\Lasso.png) 
+
 
 The image above shows the variables selected with the LASSO method: volatile acidity, pH, sulphates and alcohol. In that line, the statistical techniques employed have narrowed the possible number of predictors from 11 to 4.
 Nonetheless, an analysis of the wine-making process is necessary to determine whether the statistical correlations found with the LASSO method are due to chance or there is a “cause-effect” relation between the variables that explains the correlation. In that line, I explore with some more detail how wine quality is evaluated.    
@@ -57,7 +101,17 @@ In that line, higher concentrations of VA, in particular of acetic acid, may lea
 
 Given the information from the analysis. I conjecture that a pattern should emerge when plotting VA and the quality variable.  
 
-![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\Rplot1.png)
+```{r image 4, echo=FALSE, message=FALSE, warning=FALSE}
+
+
+library(plotly)
+plot_ly(train_set, x=train_set$quality, y=train_set$`volatile acidity`,color = I("blue"),type = "scatter" )%>%
+  layout(xaxis = list(title = 'Quality'), yaxis = list(title = 'Volatile Acidity'))
+
+
+
+
+```
 
 In the image above, a clear relation between quality and VA can be observed, that is, wines with higher concentrations of VA have the lower quality (3), while the higher quality wines (8) have less VA. Thus, VA seems to be a good predictor for wine quality.
  
@@ -68,7 +122,15 @@ So far, the statistical analysis along with information provided by Davids-20 po
 
 I found that a certain amount of VA is always to be expected in the wine. Therefore, methods, such as the use of sulphates, have been developed to reduce the concentration of VA in the wine [6]. In that line, when plotting, the quality and the sulphates variables from the data set a pattern should be expected.
 
-![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\Rplot2.png)
+```{r image 5, echo=FALSE, message=FALSE, warning=FALSE}
+
+plot_ly(train_set, x=train_set$quality, y=train_set$sulphates,color = I("orange"), type = "scatter")%>%
+  layout(xaxis = list(title = 'Quality'), yaxis = list(title = 'Sulphates'))
+
+
+
+```
+
 
 The plot above shows that higher concentrations of sulphates are to be found on the best quality wines(8) in comparison with lowest quality ones(3). Suggesting that the use of sulfates to reduce the amount of VA took place.
 
@@ -81,16 +143,26 @@ Although the presence of acetic acid must be reduced on the wine, higher concent
 
 This lies on the fact that one of the causes of spoilage is oxidation, which can be prevented with acids. The acidity levels are measured using the pH scale that goes from cero to fourteen. The values closer to zero represent more acidity, and values closer to fourteen lower levels of it.
 
+![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\pH.png)
 
-![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\pH.png)[7]
 
 
 Typically, wines have an acidity range between 3 and 4 according to the pH scale. Thus, higher pH values indicate lower acidity levels, and therefore an increased risk of oxidation. Winemakers add sulfur acid to wine in order to decrease the pH value, and therefore reduce the risk of oxidation.  
 
 In that line, a plot of pH variable against the quality one, should show a decreasing relation, that is, lower pH values should be present on the best quality wines, while higher ones on low quality ones.
 
+```{r image 6, echo=FALSE, message=FALSE, warning=FALSE}
 
-![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\Rplot3.png)
+plot_ly(train_set, x=train_set$quality, y=train_set$pH,color = I("green"), type = "scatter")%>%
+  layout(xaxis = list(title = 'Quality'), yaxis = list(title = 'pH'))
+
+
+
+
+```
+
+
+
 
 As predicted, the plot shows the decreasing relation between pH values and quality. As with the variables VA and sulphates, the statistical argument and the information of the wine-making process support the inclusion of the pH variable on the model.
 
@@ -100,7 +172,16 @@ Though sulfuric acid can be effective in lowering pH values, care has to be take
 
 Given that alcohol reduces the risk of oxidation by decreasing the pH values, one may expect an increasing in the wine quality with the increase of alcohol levels when plotting the quality variable against the alcohol one.
 
-![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\Rplot4.png)
+
+```{r image 7, echo=FALSE, message=FALSE, warning=FALSE}
+
+plot_ly(train_set, x=train_set$quality, y=train_set$alcohol,color = I("purple"), type = "scatter")%>%
+  layout(xaxis = list(title = 'Quality'), yaxis = list(title = 'Alcohol'))
+
+
+
+
+```
 
 As anticipated, an increasing relation between alcohol content and quality can be observed in the plot above. That is, higher concentrations of alcohol are present in the best quality wines, while lesser levels of it were to be found on the lower quality ones.
 
@@ -112,26 +193,86 @@ Given that no linear relation was found between the variables on the training se
 
 In that line, I train two models, one based on the _Random Forest Method_ and the other on the _Boosting with Random Forest_ one.
 
-## In Sample error and Cross-Validation
+## In Sample error
 
 I made two predictions in the training set to obtain the _In Sample error_ of the model. One using the model train with the _Random Forest Method_, and one with the _Boosting with Random Forest method_ respectively. The Random Forest method achieved an accuracy rate of 1, while the Boosting with Random Forest Method had one of 0.7596. I employed the *confusion matrix* function to calculate both values.
 
+```{r image 8, echo=FALSE, message=FALSE, warning=FALSE}
+library(caret)
+ModelForestwine <-train(as.factor(quality)  ~ `volatile acidity`+pH+alcohol+sulphates , method = "rf",data =train_set)
 
-Since the accuracy level of at least one of the models was at least 0.8., I proceeded to make one prediction on the *validation set* to estimate the _Out Sample error_ using the _Random forest model_. The model achieved an accuracy rate of 0.9068 again, *the confusion Matrix* function was used to calculate both values.
 
-As expected, the accuracy rate of the _Random forest model_ decreased when exposed to new data. Nonetheless, the accuracy rate of the Random Forest Method remains well about the 0.8 threshold, as an indication of the viability of the model.
+PredForestwine <-predict(ModelForestwine, newdata = train_set)
 
-I set an upper bound for the _Random Forest Model_ based on its performance in the validation set, that is, 0.9068 of accuracy. I estimated the _Out-Sample error_ on 0.8 given the model loses 0.1 on accuracy on the validation set. Thus the final accuracy of the model should be in the range between 0.9068 and 0.8.
+
+confusionMatrix(as.factor(PredForestwine),as.factor(train_set$quality))
+
+
+
+
+
+```
+
+```{r image 9, message=FALSE, warning=FALSE, include=FALSE}
+ModelBoostingwine <-train(as.factor(quality) ~ `volatile acidity`+pH+alcohol+sulphates, method = "gbm",data =train_set)
+
+PredBoostingwine <-predict(ModelBoostingwine, newdata = train_set)
+
+
+
+
+
+```
+
+
+
+```{r image 10, message=FALSE, warning=FALSE, include=FALSE}
+
+confusionMatrix(as.factor(PredBoostingwine),as.factor(train_set$quality))
+
+
+
+```
+
+Since the accuracy level of at least one of the models was at least 0.8., I proceeded to make one prediction on the *test_set* to estimate the _Out Sample error_ using the _Random forest model_. 
 
 ## Test set and Out Sample Error
 
-I made a prediction on the test set with the _Random Forest Model_ with an accuracy rate of 0.8967. In that line, the actual _Out Sample error_ was between the ranges I predicted. Moreover, the actual accuracy of the model was significantly closer to the upper bound than to the lower one. In that line, a substantial drop in accuracy should not be expected on new data, making the model a valuable tool for predicting wine quality. 
+The model achieved an accuracy rate of 0.6 again, *the confusion Matrix* function was used to calculate the values.
+
+```{r image 11, message=FALSE, warning=FALSE, include=FALSE}
+
+PredForestT <- predict(ModelForestwine, newdata = test_set)
+
+
+```
+```{r image 12, echo=FALSE, message=FALSE, warning=FALSE}
+
+confusionMatrix(as.factor(PredForestT), as.factor(test_set$quality))
+
+
+```
+
+
+
+
+As expected, the accuracy rate of the _Random forest model_ decreased when exposed to new data. Nonetheless, the accuracy rate of the Random Forest Method remains above the 0.5 threshold, as an indication of the viability of the model.
+
 
 # Conclusion
+Paolo Cortez along with other researchers [8] created an algorithm based on SVA (singular value decomposition) for predicting the quality of wine using the same data set I use[9] . Their algorithm achieved an accuracy rate of 89.9% [10]. In contrast, my algorithm based on the Random Forest method reached an accuracy rate of 67.7%. Based only on the accuracy rate, one may argue that their algorithm performs better than mine. 
 
-Paolo Cortez and company [8] created an algorithm based on SVA (singular value decomposition) for predicting the quality of wine using the same data set I use(I focused on the samples of red wine, while Cortez and company analyzed both the red and white samples). . Their algorithm achieved an accuracy rate of 89.9% [9] overall. Nonetheless, the prediction accuracy for the qualities 3, 4 and 8 on red wines were very low [10]. In contrast, my algorithm, based on a non-linear approach, was fairly accurate for predicting those classes, despite the fact that it only used 4 out of the 11 variables unlike Cortez and company algorithm.
+Nonetheless, on the one hand, (Cortez et al.) use all the random variables within the data set as predictors (11), while I employ only four. Thus, their algorithm may require more use of memory and computation capabilities (Scalability) increasing the time to calculate a prediction. As a result, the algorithm may be difficult to implement [10]. 
 
-In that line, the methodology I employed on building the algorithm has shown that using statistical tools along with information about the nature of the data can lead to a more accurate algorithm that also is able to explain the relation between the variables.  
+On the other hand, my algorithm offers a set of variables and percentages that wine-makers can use to improve the quality of their wines. Although my algorithm is less accurate than the one from (Cortez et al.), it can be more useful for practical applications.  
+
+There is always a trade-off between accuracy and interpretability when it comes to the construction of an algorithm. One can have a very accurate algorithm that but may be very hard to interpret. This is important because interpretability answers the question of why certain variables are good predictors, while other ones no.
+
+This trade-off between accuracy and interpretability lies at the heart of the distinction between machine learning and statistical learning. The former puts more focus on the side of predictability, while the latter on interpretability and statistical inference. My analysis falls into the latter.  
+
+Thus, the value of an algorithm lies in its purpose . On the one hand, if the objective is interpretability, then it makes sense to sacrifice some accuracy (as I did). On the other hand, if the goal is predictability, then one may prefer to lose interpretability (as Cortez et al. did) [11]. 
+
+
 
 # Bibliography 
 
@@ -153,13 +294,12 @@ In that line, the methodology I employed on building the algorithm has shown tha
 Modeling wine preferences by data mining from physicochemical properties.
 In Decision Support Systems, Elsevier, 47(4):547-553, 2009.
 
-[9]See, P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis.
-Modeling wine preferences by data mining from physicochemical properties.
-In Decision Support Systems, Elsevier, 47(4):547-553, 2009.Pp 550
+[9] I focused on the samples of red wine, while (Cortey et al.) analyzed both the red and white samples
 
-[10] See, P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis.
-Modeling wine preferences by data mining from physicochemical properties.
-In Decision Support Systems, Elsevier, 47(4):547-553, 2009.Pp 551
+[10]See, P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis.
+Modeling wine preferences by data mining from physicochemical properties.In Decision Support Systems, Elsevier, 47(4):547-553, 2009.Pp 550
 
+[11] For instance,[Netlix, ](<https://netflixtechblog.com/netflix-recommendations-beyond-the-5-stars-part-1-55838468f429//>) decided not to use the algorithm that won the million dollars price competition for improving their suggestion accuracy rate due to scalability issues  
 
+[12]It is also worth noting that the prediction accuracy for the qualities 3, 4, and 8 on red wines was very low both in mine and in the SVA-based algorithm. This suggests that not the type of algorithm, but the small size of the sample may explain the low accuracy rates of those classes in both algorithms. Because both algorithms perform better in those classes where more data points are available . 
 
