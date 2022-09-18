@@ -143,7 +143,7 @@ Although the presence of acetic acid must be reduced on the wine, higher concent
 
 This lies on the fact that one of the causes of spoilage is oxidation, which can be prevented with acids. The acidity levels are measured using the pH scale that goes from cero to fourteen. The values closer to zero represent more acidity, and values closer to fourteen lower levels of it.
 
-![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\pH.png)
+![Alt text](\Users\Wendy Marin\OneDrive - Universidad del rosario\Documentos\Caret R\Wine\Images\pH.png)[7]
 
 
 
@@ -262,7 +262,7 @@ As expected, the accuracy rate of the _Random forest model_ decreased when expos
 # Conclusion
 Paolo Cortez along with other researchers [8] created an algorithm based on SVA (singular value decomposition) for predicting the quality of wine using the same data set I use[9] . Their algorithm achieved an accuracy rate of 89.9% [10]. In contrast, my algorithm based on the Random Forest method reached an accuracy rate of 67.7%. Based only on the accuracy rate, one may argue that their algorithm performs better than mine. 
 
-Nonetheless, on the one hand, (Cortez et al.) use all the random variables within the data set as predictors (11), while I employ only four. Thus, their algorithm may require more use of memory and computation capabilities (Scalability) increasing the time to calculate a prediction. As a result, the algorithm may be difficult to implement [10]. 
+Nonetheless, on the one hand, (Cortez et al.) use all the random variables within the data set as predictors (11), while I employ only four. Thus, their algorithm may require more use of memory and computation capabilities (Scalability) increasing the time to calculate a prediction. As a result, the algorithm may be difficult to implement [11]. 
 
 On the other hand, my algorithm offers a set of variables and percentages that wine-makers can use to improve the quality of their wines. Although my algorithm is less accurate than the one from (Cortez et al.), it can be more useful for practical applications.  
 
@@ -270,7 +270,7 @@ There is always a trade-off between accuracy and interpretability when it comes 
 
 This trade-off between accuracy and interpretability lies at the heart of the distinction between machine learning and statistical learning. The former puts more focus on the side of predictability, while the latter on interpretability and statistical inference. My analysis falls into the latter.  
 
-Thus, the value of an algorithm lies in its purpose . On the one hand, if the objective is interpretability, then it makes sense to sacrifice some accuracy (as I did). On the other hand, if the goal is predictability, then one may prefer to lose interpretability (as Cortez et al. did) [11]. 
+Thus, the value of an algorithm lies in its purpose . On the one hand, if the objective is interpretability, then it makes sense to sacrifice some accuracy (as I did). On the other hand, if the goal is predictability, then one may prefer to lose interpretability (as Cortez et al. did) [12]. 
 
 
 
