@@ -87,7 +87,7 @@ The [Student T distribution](<https://en.wikipedia.org/wiki/Student%27s_t-distri
 
 The standard deviation of the Student T distribution is the ratio of the square root of X/ X-2 which is defined for values of X larger than 2. The [kurtosis](<https://en.wikipedia.org/wiki/Kurtosis>) is given by the following expression 3 + 6/X-4 defined for values of X greater than 4.
 
-Given the dependence of the kurtosis on the parameter X. We could solve the following equation to find the value of X that matches our data: 3 + (6/X-4) = 41. In our case, X should be around 0.22. Similarly, we could estimate a value of X for the standard deviation of the Student T distribution to match the one on our time series.
+Given the dependence of the kurtosis on the parameter X. We could solve the following equation to find the value of X that matches our data: 3 + (6/X-4) = 41. In our case, X should be around 4.157. Similarly, we could estimate a value of X for the standard deviation of the Student T distribution to match the one on our time series.
 
 Nonetheless, the fact that both the standard deviation and the kurtosis depend on the value of X leads us to a conundrum. We could find either the value X to match the standard deviation or the kurtosis of the oil price, but it would be very difficult to find a value of X that will give us both moments simultaneously. 
 
