@@ -1,0 +1,140 @@
+---
+title: "Prediction of MPG by transmission type"
+author: "Nicolas Montenegro"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Executive Summary
+
+An analysis based on linear regression is carried on to determine whether a manual or an automatic transmission has an impact on Miles per Gallon (MPG). The data exploratory analysis point to the construction of two linear models. One model predicts MPG with the type of transmission(automatic or manual), while the other one with the weight of a car plus the type of transmission. From the models, we conclude that an automatic or manual transmission has zero to no impact on MPG performance.Several tests were used to establish the robustness of the models    
+
+
+
+## Introduccion  
+
+This report describes a linear regression approach to determine whether the type of transmission (manual or automatic) has an impact on Miles per Gallon (MPG), or in other words, find an answer to the following question: Is an automatic or manual transmission better for MPG?
+
+The data for the analysis comes from the 1974 _Motor Trend US magazine_ and comprises fuel consumption and 10 aspects of automobile design and performance for 32 automobiles (1973–74 models).
+
+## Exploratory Data Analysis 
+
+MPG is used as a measure of car performance. An automobile with 24 MPG is going to be less efficient than one with 30 MPG. The reason lies that a lower MPG implies that a car will use more fuel per mile. 
+
+The transmission of a car makes it possible to change gears. Thus, controlling the transfer of power to the rear tires of the vehicle. “There are two types of transmissions: manual and automatic […]. In manual transmissions, gear selection is made manually with a gear shift, and coupling and engaging are done using a clutch. In the automatic transmission, on the other hand, everything is done automatically, and the clutch is replaced by a torque converter”[1]
+
+Given, that the difference between a manual and an automatic transmission rest on how the gears are shifted, and not on a different set of gears employed. The type of transmission _a priori_ should not have any impact on MPG. Thus, a plot of the MPG variable against the transmission one. Should show no effect on MPG performance.
+
+```{r image 1, echo=FALSE, message=FALSE, warning=FALSE}
+data("mtcars")
+library(plotly)
+library(GGally)
+library(tseries)
+library(caret)
+
+qplot(factor(am),mpg,xlab='Transmision', ylab= 'MPG', data=mtcars,fill= factor(am),
+    geom=c("boxplot","jitter"))
+
+```
+
+Contrary to our assumption the data suggest a clear relationship between the type of transmission and MPG. Automobiles with an automatic transmission (“0”) have lower MPG on average than those with manual transmission (“1”). Or in other words, the data indicates that an automatic transmission has a negative impact on MPG. 
+
+## First linear model
+
+The exploratory data analysis point to a possible relation between the transmission type and MPG. A linear model should reveal the degree to which the type of transmission can predict MPG.
+
+```{r image 2, echo=FALSE, message=FALSE, warning=FALSE}
+fit_linear <- lm(mtcars$mpg~ factor(mtcars$am), data = mtcars)
+summary(fit_linear)
+
+```
+Our model shows that the expected MPG for cars with an automatic transmission is 17.147. The model also shows that there is an increase of 7.245 in MPG for cars with a manual transmission, Thus, cars with a manual transmission have an expected MPG of 24.392. The t-statics tell us that the probability that the expected values are equal to zero is very low. Thus, the values have a higher probability of being accurate.
+
+Nonetheless, a plot of the residuals of our model shows a clear patron (two lines). The fact that a visible patron can be found on the residuals is strong evidence that our model is not doing a good job of predicting MPG. Suggesting that another variable may explain the relation between MPG and the transmission type found on the box plot.
+
+```{r image 3, echo=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(data.frame(x = mtcars$mpg, y = resid(fit_linear)), aes(x = mtcars$mpg, y = resid(fit_linear)))+
+  geom_hline(yintercept = 0, size = 2) +
+  geom_point(size = 3, colour = "black", alpha = 0.4)+
+  geom_point(size = 2, colour = "red", alpha = 0.4)+
+  xlab("MPG") + ylab("Residuals") + ggtitle("Residuals vs MPG")
+
+```
+
+
+## Second linear model
+
+Newton’s second equation of motion states Force = Mass (weight) * Acceleration. Consequently, object A with a mass of 20 pounds will require less force to be moved than object B with 50 pounds of mass. This is relevant for our analysis because a heavier car would require more energy(fuel) to be moved. Hence, cars that are heavier than the average would have a lower MPG. Let´s confirm this hypothesis by plotting the variable MPG against the weight one:
+
+```{r image 4, echo=FALSE, message=FALSE, warning=FALSE}
+plot_ly(mtcars, x=mtcars$wt, y=mtcars$mpg,color = I("blue"),type = "scatter" )%>%
+  layout(xaxis = list(title = 'Weight'), yaxis = list(title = 'MPG'))
+
+
+```
+
+We can observe that there is a negative relation between MPG and weight. That is, an increase in the weight of a particular automobile decreases its MPG. Moreover, weight has a correlation of -0.867 with the MPG. Therefore, weight can be considered a good predictor of MPG. In light of these findings, we can reasonably conjecture that cars with an automatic transmission are on average heavier than those with a manual one in our data set.
+
+As before, we can plot the weight variable against the transmission one to confirm our hypothesis.
+
+```{r image 5, echo=FALSE, message=FALSE, warning=FALSE}
+qplot(factor(am),wt, xlab = "Transmission",ylab = "Weight", data=mtcars,fill=factor(am),
+            geom=c("boxplot","jitter"))
+
+
+```
+
+The plot confirms our conjecture. The cars equipped with an automatic transmission are heavier on average that the ones with a manual one. Thus, a model adjusted by weight should show no impact on MPG based on transmission.
+```{r image 6, echo=FALSE, message=FALSE, warning=FALSE}
+fit_linear_2 <- lm(mpg ~ wt + factor(am), data = mtcars)
+
+summary(fit_linear_2)
+
+```
+
+
+The second model shows that the average MPG on our data set is 37.29794. From the model, we can also infer that a loss of 5.35281 in MPG should be expected by a 1000 pounds increase in weight on a given car [2]. Finally, the model suggests that a decrease of 0.02362 in MPG can be expected with cars equipped with a manual transmission.
+
+The last coefficient on our model appears to contradict our hypothesis that a model adjusted by weight should show that the type of transmission has no impact on MPG. Nonetheless, the t-statics of the coefficient in question have a high probability (0.988) of being cero. Therefore, we can conclude with a high degree of confidence that MPG performance is independent of transmission type.
+
+Moreover, the plot of the residuals versus MPG of the model shows no visible patron in it. Implying our model is doing a good job in predicting MPG.   
+
+
+```{r image 7, echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data.frame(x = mtcars$mpg, y = resid(fit_linear_2)), aes(x = mtcars$mpg, y = resid(fit_linear_2)))+
+  geom_hline(yintercept = 0, size = 2) +
+  geom_point(size = 3, colour = "black", alpha = 0.4)+
+  geom_point(size = 2, colour = "red", alpha = 0.4)+
+  xlab("MPG") + ylab("Residuals") + ggtitle("Residuals vs MPG")
+
+```
+
+Although our model does a good job in predicting MPG, a [Shapiro-Wilk](<https://en.wikipedia.org/wiki/Shapiro%E2%80%93Wilk_test>) normality test on the residuals shows that these are not normally distributed (a p-value higher than 0.5 is necessary to conclude normality). The fact that the residuals are not normally distributed is a strong indicator that there is some percentage of the variance that our model fails to capture. In other words, a better model for predicting MPG can be constructed.
+
+```{r image 8, echo=FALSE, message=FALSE, warning=FALSE}
+shapiro.test(fit_linear_2$residuals)
+
+
+```
+
+However, given that our main goal is not to predict MPG but to establish whether the type of transmission has an impact on MPG, which has been accomplished. We will not go any further [3].  
+
+## Conclusion
+
+The goal of this analysis is to establish if MPG is affected by the transmission type of a car. A linear model built to predict MPG based on two predictors: transmission type and weight has led us to conclude, with a high degree of confidence, that the type of transmission (manual or automatic) has zero to no impact on MPG performance. 
+
+## Bibliography and Notes
+
+[1] Parker, Berry. The Isaac Newton School of Driving. The Johns Hopkins University Press. Baltimore,2003 Pp. 127
+
+[2] The weight variable is defined as the ratio of one unit of MPG over and 1000 pounds of weight 
+
+[3] A better model for the prediction of MPG based on the same data set can be found in: Henderson and Velleman (1981), Building multiple regression models interactively. Biometrics, 37, 391–411. 
+
+
+
+
+
