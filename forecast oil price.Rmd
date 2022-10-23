@@ -39,7 +39,7 @@ fig
 
 ```
 
-The above plot shows the price of _WTI_ throughout a ten-year period. One can easily notice the significant drop in prices in 2020 when the price hit a low of 36 dollars per barrel, compared with 104 dollars per barrel in july 2014. Thus, the price of oil fell by more than 50%. The purpose of risk measures such as VaR and ES is to protect investors from drawdowns such as the one in 2020 by anticipating the possible losses on a particular day of trade in the future.
+The above plot shows the price of _WTI_ throughout a ten-year period. One can easily notice the significant drop in prices in 2020 when the price hit a low of -36 dollars per barrel, compared with 104 dollars per barrel in july 2014. Thus, the price of oil fell by more than 50%. The purpose of risk measures such as VaR and ES is to protect investors from drawdowns such as the one in 2020 by anticipating the possible losses on a particular day of trade in the future.
 
 Given that the *VaR* and *ES* require an estimation of the prices to be calculated. Firstly, we should identify the distribution of our time series. Secondly, we should determine whether there are correlations in the data that need to be taken into account. These two steps have to be made in order to build a robust model of the oil price. 
 Once, we have identified the distribution and whether there are correlations in the data. We built a model based on that information to forecast the price of oil. Then, we calculate the VaR and ES and run backtesting to estimate how accurate the VaR is.
