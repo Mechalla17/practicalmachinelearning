@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 An analysis based on linear regression is carried on determining whether a manual or an automatic transmission has an impact on Miles per Gallon (MPG). The data analysis points to the construction of two linear models . One model predicts MPG with the type of transmission, while the other one predicts it using the weight of a car plus the type of transmission. From the models, we conclude that an automatic or manual transmission has zero to none impact on MPG performance. Several tests were applied to establish the robustness of the models.  
 
-## Introduccion  
+## Introduction  
 
 
 This report describes a linear regression approach to determine whether the type of transmission (manual or automatic) has an impact on Miles per Gallon (MPG). The approach should also find an answer to the following question: Is an automatic or manual transmission better for MPG? Understanding the impact of the type of transmission on MPG can help manufacturers to determine whether to equip more cars with manual or automatic transmissions to improve MPG performance. 
